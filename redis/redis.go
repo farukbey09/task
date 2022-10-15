@@ -29,7 +29,7 @@ func (r *RedisClient) AddMessageToRedis(message model.MessageData) error {
 
 	_, err := r.client.Do(
 		"HMSET",
-		"model",
+		"model:0",
 		"message",
 		message.Message,
 		"sender",
@@ -46,20 +46,13 @@ func (r *RedisClient) AddMessageToRedis(message model.MessageData) error {
 	return nil
 }
 
-func (r *RedisClient) FetchMessage(key string) (*model.MessageData, error) {
+func (r *RedisClient) FetchLastMessage() {
 
-	reply, err := redis.Values(r.client.Do("HGETALL", key))
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
+	values, _ := redis.StringMap(r.client.Do("HGETALL", "model:0"))
+
+	for k, v := range values {
+		fmt.Println("Key:", k)
+		fmt.Println("Value:", v)
 	}
-	var model model.MessageData
-	err = redis.ScanStruct(reply, &model)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-	fmt.Println(model)
-	return &model, err
 
 }

@@ -44,6 +44,17 @@ func (h *Handler) HandleAddMessage(c *gin.Context) {
 		return
 	}
 
-	h.redisClient.FetchMessage("model")
+	h.redisClient.FetchLastMessage()
+
+}
+
+func (h *Handler) HandleGetMessages(c *gin.Context) {
+	dto := model.DTO{}
+	if err := c.BindJSON(&dto); err != nil {
+		c.Status(400)
+		return
+	}
+
+	go h.rabbitmqClient.Message()
 
 }

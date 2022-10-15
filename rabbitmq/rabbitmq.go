@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/farukbey09/task/model"
 	"github.com/streadway/amqp"
@@ -38,14 +39,12 @@ func (r *RabbitmqClient) AddQueue(message model.MessageData) error {
 		false,
 		false,
 		nil)
-
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	fmt.Println(message)
-	model, err := json.Marshal(message)
 
+	model, err := json.Marshal(message)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -60,5 +59,20 @@ func (r *RabbitmqClient) AddQueue(message model.MessageData) error {
 		return err
 	}
 
+	go r.Message()
 	return nil
+}
+
+func (r *RabbitmqClient) Message() {
+	msgs, _ := r.channel.Consume("Message", "", true, false, false, false, nil)
+
+	forever := make(chan bool)
+	go func() {
+		for d := range msgs {
+			log.Printf("Received a message: %s", d.Body)
+		}
+	}()
+
+	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+	<-forever
 }
